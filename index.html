@@ -2,150 +2,145 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>猜歌遊戲（完整版）</title>
-
+  <title>猜歌遊戲（輸入暫停版）</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
-      padding: 40px;
-    }
-
-    .box {
-      max-width: 520px;
-      margin: auto;
-      background: #fff;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    button {
-      padding: 10px 16px;
-      margin: 6px 4px 6px 0;
-      font-size: 15px;
-      cursor: pointer;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 16px;
-    }
-
-    .msg {
-      margin-top: 12px;
-      font-size: 18px;
-      min-height: 26px;
-    }
+    body { font-family: Arial; background: #f3f4f6; padding: 40px; }
+    .box { max-width: 520px; margin: auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    button { padding: 10px 16px; margin: 6px 4px 6px 0; font-size: 15px; cursor: pointer; }
+    input { width: 100%; padding: 10px; margin-top: 10px; font-size: 16px; }
+    .msg { margin-top: 12px; font-size: 18px; min-height: 26px; }
   </style>
 </head>
-
 <body>
-  <div class="box">
-    <h1>🎵 猜歌遊戲</h1>
+<div class="box">
+  <h1>🎵 猜歌遊戲</h1>
 
-    <!-- 有 controls，播放條一定出現 -->
-    <audio id="audio" controls></audio>
+  <audio id="audio" controls></audio>
 
-    <div>
-      <button onclick="startSong()">來一首</button>
-      <button onclick="continuePlay()">繼續</button>
-      <button onclick="showAnswer()">看答案</button>
-      <button onclick="resetGame()">重設</button>
-    </div>
-
-    <input id="guessInput" placeholder="輸入你猜的歌名">
-    <button onclick="guessSong()">猜歌</button>
-
-    <div class="msg" id="message"></div>
+  <div>
+    <button onclick="startSong()">來一首</button>
+    <button onclick="continuePlay()">繼續</button>
+    <button onclick="showAnswer()">看答案</button>
+    <button onclick="resetGame()">重設</button>
   </div>
 
-  <script>
-    // ===== 歌曲清單（自行改歌名與檔名）=====
-    const SONGS = [
-  { title: "看破", file: "songs/看破.mp3", played: false },
-  { title: "你好不好", file: "songs你好不好.mp3", played: false },
-  { title: "對等關係", file: "songs/對等關係.mp3", played: false },
-  { title: "壞人", file: "songs/壞人.mp3", played: false },
-  { title: "看着我的眼睛说", file: "songs/看着我的眼睛说.mp3", played: false }
-];
+  <input id="guessInput" placeholder="輸入你猜的歌名">
+  <button onclick="guessSong()">猜歌</button>
 
+  <div class="msg" id="message"></div>
+</div>
 
-    const audio = document.getElementById("audio");
-    const msg = document.getElementById("message");
-    const input = document.getElementById("guessInput");
+<script>
+  const SONGS = [
+    { title: "看破", file: "songs/看破.mp3", played: false, currentTime: 0 },
+    { title: "看著我的眼睛說", file: "songs/看著我的眼睛說.mp3", played: false, currentTime: 0 },
+    { title: "你好不好", file: "songs/你好不好.mp3", played: false, currentTime: 0 },
+    { title: "壞人", file: "songs/壞人.mp3", played: false, currentTime: 0 },
+    { title: "對等關係", file: "songs/對等關係.mp3", played: false, currentTime: 0 }
+  ];
 
-    let currentSong = null;
-    let answered = false;
-    let timer = null;
-    const PLAY_TIME = 30; // 每次播放 30 秒
+  const audio = document.getElementById("audio");
+  const msg = document.getElementById("message");
+  const input = document.getElementById("guessInput");
 
-    // ===== 來一首 =====
-    function startSong() {
-      const list = SONGS.filter(s => !s.played);
-      if (list.length === 0) {
-        msg.textContent = "所有歌曲都已播放，請重設";
-        return;
-      }
+  let currentSong = null;
+  let answered = false;
+  let timer = null;
+  const PLAY_TIME = 30;
 
-      currentSong = list[Math.floor(Math.random() * list.length)];
-      currentSong.played = true;
-      answered = false;
-      input.value = "";
-      msg.textContent = "";
-
-      audio.src = currentSong.file;
-      audio.load();
-      audio.currentTime = 0;
-
-      audio.play();
-      playFor30Seconds();
+  // ===== 來一首 =====
+  function startSong() {
+    const list = SONGS.filter(s => !s.played);
+    if (list.length === 0) {
+      msg.textContent = "所有歌曲都已播放，請重設";
+      return;
     }
 
-    // ===== 播放 30 秒後暫停 =====
-    function playFor30Seconds() {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        audio.pause();
-      }, PLAY_TIME * 1000);
+    currentSong = list[Math.floor(Math.random() * list.length)];
+    currentSong.played = true;
+    answered = false;
+    input.value = "";
+    msg.textContent = "";
+
+    audio.src = currentSong.file;
+    audio.load();
+    audio.currentTime = currentSong.currentTime || 0;
+
+    audio.play();
+    playFor30Seconds();
+  }
+
+  // ===== 每段播放 30 秒暫停 =====
+  function playFor30Seconds() {
+    clearTimeout(timer);
+    const remaining = audio.duration - audio.currentTime;
+    const time = remaining < PLAY_TIME ? remaining : PLAY_TIME;
+
+    timer = setTimeout(() => {
+      audio.pause();
+      if (currentSong) currentSong.currentTime = audio.currentTime;
+    }, time * 1000);
+  }
+
+  // ===== 繼續播放 =====
+  function continuePlay() {
+    if (!currentSong) {
+      msg.textContent = "請先按「來一首」開始";
+      return;
+    }
+    if (answered) {
+      msg.textContent = "已答對或看答案，無法繼續";
+      return;
     }
 
-    // ===== 猜歌 =====
-    function guessSong() {
-      if (!currentSong) return;
+    audio.currentTime = currentSong.currentTime || 0;
+    audio.play();
+    playFor30Seconds();
+  }
 
-      const guess = input.value.trim().toLowerCase();
-      const answer = currentSong.title.toLowerCase();
+  // ===== 猜歌 =====
+  function guessSong() {
+    if (!currentSong) return;
 
-      if (guess === answer) {
-        msg.textContent = "🎉 答對了！";
-        answered = true;
-        audio.pause();
-      } else {
-        msg.textContent = "❌ 答錯了，再聽一點吧！";
-      }
-    }
+    const guess = input.value.trim().toLowerCase();
+    const answer = currentSong.title.toLowerCase();
 
-    // ===== 看答案 =====
-    function showAnswer() {
-      if (!currentSong) return;
-      msg.textContent = "答案是：" + currentSong.title;
+    if (guess === answer) {
+      msg.textContent = "🎉 答對了！";
       answered = true;
       audio.pause();
+    } else {
+      msg.textContent = "❌ 答錯了，再聽一點吧！";
     }
+  }
 
-    // ===== 重設 =====
-    function resetGame() {
-      SONGS.forEach(s => s.played = false);
-      currentSong = null;
-      answered = false;
+  // ===== 看答案 =====
+  function showAnswer() {
+    if (!currentSong) return;
+    msg.textContent = "答案是：" + currentSong.title;
+    answered = true;
+    audio.pause();
+  }
+
+  // ===== 重設 =====
+  function resetGame() {
+    SONGS.forEach(s => { s.played = false; s.currentTime = 0; });
+    currentSong = null;
+    answered = false;
+    audio.pause();
+    audio.src = "";
+    input.value = "";
+    msg.textContent = "遊戲已重設";
+  }
+
+  // ===== 使用者輸入時暫停音樂 =====
+  input.addEventListener("focus", () => {
+    if (!audio.paused) {
       audio.pause();
-      audio.src = "";
-      input.value = "";
-      msg.textContent = "遊戲已重設";
+      clearTimeout(timer);
+      if (currentSong) currentSong.currentTime = audio.currentTime;
     }
-  </script>
+  });
+</script>
 </body>
 </html>
